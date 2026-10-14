@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Fitness — Workout Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter fallback for SF Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', '"Inter"', 'sans-serif'],
+                    },
+                    colors: {
+                        oled: '#000000',
+                        ios: {
+                            card: '#1C1C1E',
+                            elevated: '#2C2C2E',
+                            input: '#3A3A3C',
+                            label: '#8E8E93',
+                            tertiary: '#48484A',
+                            fitness: '#A4FF00',
+                            move: '#FA114F',
+                            stand: '#00F5EA',
+                            orange: '#FF9F0A',
+                            green: '#30D158',
+                            red: '#FF453A'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #000000;
+            color: #FFFFFF;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Authentic iOS Hairline Borders */
+        .hairline-border {
+            border: 0.5px solid rgba(255, 255, 255, 0.12);
+        }
+        .hairline-b {
+            border-bottom: 0.5px solid rgba(255, 255, 255, 0.12);
+        }
+        .hairline-t {
+            border-top: 0.5px solid rgba(255, 255, 255, 0.12);
+        }
+
+        /* iOS Spring Physics Transitions */
+        .ios-spring {
+            transition: all 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        .ios-tap {
+            transition: transform 0.18s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.18s ease, background-color 0.18s ease;
+        }
+        .ios-tap:active {
+            transform: scale(0.97);
+            opacity: 0.85;
+        }
+
+        /* Dynamic Island Notification Animation */
+        #dynamic-island {
+            transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        #dynamic-island.island-hidden {
+            transform: translate(-50%, -130%) scale(0.92);
+            opacity: 0;
+            pointer-events: none;
+        }
+        #dynamic-island.island-visible {
+            transform: translate(-50%, 0) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* iOS Bottom Sheet Modal */
+        .sheet-backdrop {
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        .sheet-panel {
+            background: rgba(28, 28, 30, 0.94);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+
+        /* Clean Number Inputs */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* Hide scrollbars on horizontal pill strips */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-oled text-white selection:bg-ios-fitness selection:text-black">
+
+    <!-- Dynamic Island / iOS Notification Banner -->
+    <div id="dynamic-island" class="fixed top-3 left-1/2 z-50 w-[94%] max-w-[440px] island-hidden">
+        <div class="bg-[#161618]/95 backdrop-blur-2xl hairline-border rounded-[28px] p-3.5 shadow-[0_18px_40px_rgba(0,0,0,0.85)] flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-full bg-ios-fitness/15 flex items-center justify-center text-ios-fitness shrink-0">
+                    <i class="ph-fill ph-person-simple-run text-xl"></i>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <span id="island-title" class="text-[11px] font-semibold uppercase tracking-wider text-ios-fitness">Fitness Reminder</span>
+                        <span class="text-[11px] text-ios-label">• now</span>
+                    </div>
+                    <p id="island-body" class="text-[13px] font-medium text-white truncate mt-0.5">Time to log today's workout session.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="handleIslandLogAction()" class="ios-tap px-3 py-1.5 rounded-full bg-ios-fitness text-black font-semibold text-xs">
+                    Log
+                </button>
+                <button onclick="hideDynamicIsland()" class="ios-tap w-7 h-7 rounded-full bg-ios-elevated text-ios-label flex items-center justify-center text-xs" aria-label="Dismiss">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Centered Mobile-First App Container (480px max on desktop) -->
+    <div class="max-w-[480px] mx-auto min-h-screen pb-16 px-4 pt-4 sm:pt-6">
+
+        <!-- iOS Large Title Header -->
+        <header class="mb-4">
+            <div class="flex items-center justify-between mb-1">
+                <p id="ios-header-date" class="text-[12px] font-semibold uppercase tracking-wider text-ios-label tabular-nums">
+                    WEDNESDAY, OCT 14
+                </p>
+                <div class="flex items-center gap-2">
+                    <!-- Unit Pill (KG / LBS) -->
+                    <button onclick="toggleWeightUnit()" class="ios-tap h-7 px-2.5 rounded-full bg-ios-card hairline-border text-[12px] font-semibold text-ios-label hover:text-white tabular-nums flex items-center gap-1">
+                        <span id="unit-pill-label" class="text-white">KG</span>
+                    </button>
+
+                    <!-- Daily Reminder Pill -->
+                    <button onclick="openReminderSheet()" class="ios-tap h-7 px-3 rounded-full bg-ios-card hairline-border flex items-center gap-1.5 text-[12px] font-medium">
+                        <i id="header-bell-icon" class="ph-fill ph-bell text-ios-orange text-xs"></i>
+                        <span id="header-reminder-time" class="tabular-nums text-white font-medium">6:30 PM</span>
+                    </button>
+                </div>
+            </div>
+            <div class="flex items-baseline justify-between">
+                <h1 class="text-[34px] font-bold tracking-[-0.025em] leading-tight text-white">Summary</h1>
+                <span id="today-status-badge" class="text-[12px] font-medium text-ios-label"></span>
+            </div>
+        </header>
+
+        <!-- Compact Apple Fitness Activity & Week Card -->
+        <section class="bg-ios-card hairline-border rounded-[18px] p-4 mb-5">
+            <!-- 7-Day Week Ring Strip (M T W T F S S) -->
+            <div class="flex items-center justify-between mb-3.5 pb-3.5 hairline-b" id="week-rings-strip">
+                <!-- Populated via JS -->
+            </div>
+
+            <!-- 3 Clean Tabular Metrics -->
+            <div class="grid grid-cols-3 gap-2">
+                <div>
+                    <span class="text-[11px] font-medium uppercase tracking-wider text-ios-label block">Streak</span>
+                    <div class="flex items-baseline gap-1 mt-0.5">
+                        <span id="metric-streak" class="text-[22px] font-bold tracking-tight text-ios-move tabular-nums">0</span>
+                        <span class="text-[12px] font-semibold text-ios-label">DAYS</span>
+                    </div>
+                </div>
+                <div class="pl-3 border-l border-white/[0.08]">
+                    <span class="text-[11px] font-medium uppercase tracking-wider text-ios-label block">Week Vol</span>
+                    <div class="flex items-baseline gap-1 mt-0.5">
+                        <span id="metric-volume" class="text-[22px] font-bold tracking-tight text-ios-fitness tabular-nums">0</span>
+                        <span id="metric-volume-unit" class="text-[12px] font-semibold text-ios-label uppercase">KG</span>
+                    </div>
+                </div>
+                <div class="pl-3 border-l border-white/[0.08]">
+                    <span class="text-[11px] font-medium uppercase tracking-wider text-ios-label block">Sessions</span>
+                    <div class="flex items-baseline gap-1 mt-0.5">
+                        <span id="metric-sessions" class="text-[22px] font-bold tracking-tight text-ios-stand tabular-nums">0</span>
+                        <span class="text-[12px] font-semibold text-ios-label">TOTAL</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- iOS Segmented Control (Log Workout | History) -->
+        <div class="bg-[#1C1C1E] p-1 rounded-[11px] grid grid-cols-2 mb-5 hairline-border relative">
+            <button id="seg-btn-log" onclick="switchSegment('log')" class="ios-spring py-1.5 rounded-[8px] text-[13px] font-semibold bg-ios-elevated text-white shadow-sm">
+                Log Workout
+            </button>
+            <button id="seg-btn-history" onclick="switchSegment('history')" class="ios-spring py-1.5 rounded-[8px] text-[13px] font-semibold text-ios-label hover:text-white flex items-center justify-center gap-1.5">
+                <span>History</span>
+                <span id="history-count-pill" class="text-[11px] tabular-nums px-1.5 py-0.2 rounded-full bg-white/10 text-white">0</span>
+            </button>
+        </div>
+
+        <!-- VIEW 1: LOG WORKOUT -->
+        <main id="view-log" class="space-y-5">
+
+            <!-- Session Details (iOS Inset Grouped List) -->
+            <div>
+                <div class="flex items-center justify-between px-1 mb-1.5">
+                    <span class="text-[12px] font-medium uppercase tracking-wider text-ios-label">Session Details</span>
+                    <!-- Quick Split Pills -->
+                    <div class="flex items-center gap-1 overflow-x-auto no-scrollbar">
+                        <button type="button" onclick="applyWorkoutTemplate('Push')" class="ios-tap px-2 py-0.5 rounded-full bg-ios-card hairline-border text-[11px] font-medium text-ios-label hover:text-white">Push</button>
+                        <button type="button" onclick="applyWorkoutTemplate('Pull')" class="ios-tap px-2 py-0.5 rounded-full bg-ios-card hairline-border text-[11px] font-medium text-ios-label hover:text-white">Pull</button>
+                        <button type="button" onclick="applyWorkoutTemplate('Legs')" class="ios-tap px-2 py-0.5 rounded-full bg-ios-card hairline-border text-[11px] font-medium text-ios-label hover:text-white">Legs</button>
+                        <button type="button" onclick="applyWorkoutTemplate('Upper')" class="ios-tap px-2 py-0.5 rounded-full bg-ios-card hairline-border text-[11px] font-medium text-ios-label hover:text-white">Upper</button>
+                        <button type="button" onclick="applyWorkoutTemplate('Full Body')" class="ios-tap px-2 py-0.5 rounded-full bg-ios-card hairline-border text-[11px] font-medium text-ios-label hover:text-white">Full</button>
+                    </div>
+                </div>
+
+                <div class="bg-ios-card hairline-border rounded-[14px] overflow-hidden">
+                    <!-- Row 1: Title -->
+                    <div class="flex items-center justify-between px-4 py-3 hairline-b">
+                        <label for="session-title" class="text-[15px] text-white shrink-0 mr-4">Workout</label>
+                        <input id="session-title" type="text" placeholder="Strength Training" class="bg-transparent text-right text-[15px] text-ios-fitness font-medium focus:outline-none w-full placeholder-ios-label">
+                    </div>
+
+                    <!-- Row 2: Date & Time -->
+                    <div class="flex items-center justify-between px-4 py-2.5 hairline-b">
+                        <span class="text-[15px] text-white shrink-0">Date & Time</span>
+                        <div class="flex items-center gap-2">
+                            <input id="session-date" type="date" class="bg-ios-elevated text-[13px] text-white tabular-nums rounded-[7px] px-2.5 py-1 focus:outline-none">
+                            <input id="session-time" type="time" class="bg-ios-elevated text-[13px] text-white tabular-nums rounded-[7px] px-2.5 py-1 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Duration -->
+                    <div class="flex items-center justify-between px-4 py-2.5 hairline-b">
+                        <label for="session-duration" class="text-[15px] text-white shrink-0">Duration</label>
+                        <div class="flex items-center gap-1.5">
+                            <input id="session-duration" type="number" min="1" max="360" value="50" class="bg-ios-elevated w-16 text-center text-[14px] text-white tabular-nums font-medium rounded-[7px] py-1 focus:outline-none">
+                            <span class="text-[14px] text-ios-label">min</span>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Notes -->
+                    <div class="flex items-center justify-between px-4 py-3">
+                        <label for="session-notes" class="text-[15px] text-white shrink-0 mr-4">Notes</label>
+                        <input id="session-notes" type="text" placeholder="Optional session notes" class="bg-transparent text-right text-[14px] text-white focus:outline-none w-full placeholder-ios-label">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exercises Section -->
+            <div>
+                <div class="flex items-center justify-between px-1 mb-1.5">
+                    <span class="text-[12px] font-medium uppercase tracking-wider text-ios-label">Exercises</span>
+                    <span id="live-summary-caption" class="text-[12px] text-ios-label tabular-nums">0 Sets • 0 KG</span>
+                </div>
+
+                <!-- Dynamic Exercise Cards Container -->
+                <div id="exercises-list" class="space-y-3.5">
+                    <!-- Populated via JS -->
+                </div>
+
+                <!-- Add Exercise Bar & Quick Suggestions -->
+                <div class="mt-3.5 bg-ios-card hairline-border rounded-[14px] p-3">
+                    <div class="flex items-center gap-2">
+                        <i class="ph ph-plus-circle text-ios-fitness text-lg shrink-0"></i>
+                        <input id="custom-exercise-name" type="text" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomExercise();}" placeholder="Add exercise (e.g. Incline Bench Press)..." class="bg-transparent text-[14px] text-white placeholder-ios-label focus:outline-none w-full">
+                        <button type="button" onclick="addCustomExercise()" class="ios-tap px-3 py-1 rounded-[8px] bg-ios-elevated text-[13px] font-semibold text-ios-fitness shrink-0">
+                            Add
+                        </button>
+                    </div>
+                    <!-- Horizontal Instant-Tap Exercise Suggestions -->
+                    <div id="exercise-suggestions" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar mt-2.5 pt-2.5 hairline-t">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Primary Apple Fitness Action CTA -->
+            <div class="pt-1">
+                <button type="button" onclick="saveWorkout()" class="ios-tap w-full py-3.5 rounded-[14px] bg-ios-fitness text-black font-bold text-[16px] tracking-tight flex items-center justify-center gap-2 shadow-lg">
+                    <i class="ph-bold ph-check text-lg"></i>
+                    <span>Finish & Save Workout</span>
+                </button>
+            </div>
+        </main>
+
+        <!-- VIEW 2: WORKOUT HISTORY -->
+        <section id="view-history" class="hidden space-y-4">
+            <!-- iOS Search Bar -->
+            <div class="relative">
+                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-ios-label text-sm"></i>
+                <input id="history-search" type="text" oninput="renderHistoryList()" placeholder="Search workouts or exercises" class="w-full bg-[#1C1C1E] rounded-[10px] pl-9 pr-3 py-2 text-[14px] text-white placeholder-ios-label focus:outline-none hairline-border">
+            </div>
+
+            <!-- History Cards Container -->
+            <div id="history-list" class="space-y-3">
+                <!-- Populated via JS -->
+            </div>
+
+            <!-- Subtle Reset Option -->
+            <div class="pt-4 text-center">
+                <button onclick="promptClearAllHistory()" class="ios-tap text-[13px] text-ios-red font-medium py-2 px-4">
+                    Delete All Workout History
+                </button>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- iOS Bottom Sheet Modal: Daily Reminder Settings -->
+    <div id="reminder-sheet-wrapper" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center">
+        <!-- Backdrop -->
+        <div onclick="closeReminderSheet()" class="sheet-backdrop absolute inset-0"></div>
+
+        <!-- Sheet Panel -->
+        <div class="sheet-panel relative w-full max-w-[480px] rounded-t-[26px] sm:rounded-[26px] p-5 hairline-border z-10">
+            <!-- Grabber Handle -->
+            <div class="w-9 h-1 rounded-full bg-white/20 mx-auto mb-4 sm:hidden"></div>
+
+            <div class="flex items-center justify-between mb-4">
+                <button onclick="closeReminderSheet()" class="ios-tap text-[15px] text-ios-label">Cancel</button>
+                <h2 class="text-[16px] font-semibold text-white">Daily Reminder</h2>
+                <button onclick="saveReminderSheet()" class="ios-tap text-[15px] font-semibold text-ios-fitness">Done</button>
+            </div>
+
+            <!-- Inset Grouped Settings -->
+            <div class="bg-[#2C2C2E]/80 rounded-[14px] overflow-hidden hairline-border mb-4">
+                <!-- Toggle Row -->
+                <div class="flex items-center justify-between px-4 py-3 hairline-b">
+                    <div>
+                        <span class="text-[15px] text-white block">Daily Workout Alert</span>
+                        <span class="text-[12px] text-ios-label">Remind me if untracked today</span>
+                    </div>
+                    <!-- Native iOS Green Switch (#30D158) -->
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="sheet-reminder-enabled" class="sr-only peer" checked>
+                        <div class="w-[51px] h-[31px] bg-[#39393D] rounded-full peer peer-checked:bg-ios-green transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-[27px] after:w-[27px] after:shadow-md after:transition-all peer-checked:after:translate-x-[20px]"></div>
+                    </label>
+                </div>
+
+                <!-- Time Row -->
+                <div class="flex items-center justify-between px-4 py-3 hairline-b">
+                    <span class="text-[15px] text-white">Scheduled Time</span>
+                    <input id="sheet-reminder-time" type="time" value="18:30" class="bg-[#3A3A3C] text-white tabular-nums text-[15px] font-medium px-3 py-1 rounded-[8px] focus:outline-none">
+                </div>
+
+                <!-- Sound Chime Row -->
+                <div class="flex items-center justify-between px-4 py-3 hairline-b">
+                    <span class="text-[15px] text-white">Haptic Chime Sound</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="sheet-reminder-sound" class="sr-only peer" checked>
+                        <div class="w-[51px] h-[31px] bg-[#39393D] rounded-full peer peer-checked:bg-ios-green transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-[27px] after:w-[27px] after:shadow-md after:transition-all peer-checked:after:translate-x-[20px]"></div>
+                    </label>
+                </div>
+
+                <!-- Custom Note Row -->
+                <div class="flex items-center justify-between px-4 py-3">
+                    <span class="text-[15px] text-white shrink-0 mr-3">Message</span>
+                    <input id="sheet-reminder-msg" type="text" value="Time to close your rings and log today's workout." class="bg-transparent text-right text-[14px] text-ios-label focus:text-white focus:outline-none w-full">
+                </div>
+            </div>
+
+            <!-- Browser Notification Permission & Test Action Group -->
+            <div class="bg-[#2C2C2E]/80 rounded-[14px] overflow-hidden hairline-border">
+                <button type="button" onclick="requestOSNotifications()" class="ios-tap w-full flex items-center justify-between px-4 py-3 hairline-b text-left">
+                    <span class="text-[15px] text-white">System Notification Access</span>
+                    <span id="os-perm-badge" class="text-[13px] text-ios-orange font-medium">Enable</span>
+                </button>
+                <button type="button" onclick="triggerWorkoutReminder(true)" class="ios-tap w-full flex items-center justify-center gap-2 px-4 py-3 text-[15px] font-medium text-ios-fitness">
+                    <i class="ph-fill ph-bell-ringing"></i>
+                    <span>Send Test Notification</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- iOS Alert Action Modal (Replaces native confirm/alert) -->
+    <div id="ios-dialog" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/65 backdrop-blur-sm">
+        <div class="w-[270px] bg-[#1E1E1E]/95 backdrop-blur-2xl rounded-[14px] overflow-hidden hairline-border text-center shadow-2xl">
+            <div class="p-4">
+                <h3 id="ios-dialog-title" class="text-[17px] font-semibold text-white">Delete Workout?</h3>
+                <p id="ios-dialog-desc" class="text-[13px] text-ios-label mt-1 leading-snug">This session will be permanently removed from your history.</p>
+            </div>
+            <div class="grid grid-cols-2 hairline-t">
+                <button id="ios-dialog-cancel" class="ios-tap py-3 text-[17px] text-[#0A84FF] font-normal border-r border-white/[0.12]">Cancel</button>
+                <button id="ios-dialog-confirm" class="ios-tap py-3 text-[17px] text-ios-red font-semibold">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**************************************************************
+         * STATE & STORAGE KEYS
+         **************************************************************/
+        const STORAGE_KEYS = {
+            WORKOUTS: 'aetherfit_workouts_v1',
+            REMINDER: 'aetherfit_reminder_v1',
+            UNIT: 'aetherfit_unit_v1'
+        };
+
+        const EXERCISE_SUGGESTIONS = [
+            'Bench Press',
+            'Barbell Squat',
+            'Deadlift',
+            'Overhead Press',
+            'Pull-Ups',
+            'Barbell Row',
+            'Incline DB Press',
+            'Romanian Deadlift',
+            'Lat Pulldown',
+            'Lateral Raise',
+            'Dip',
+            'Barbell Curl'
+        ];
+
+        const WORKOUT_TEMPLATES = {
+            'Push': ['Bench Press', 'Incline DB Press', 'Overhead Press', 'Lateral Raise'],
+            'Pull': ['Deadlift', 'Pull-Ups', 'Barbell Row', 'Barbell Curl'],
+            'Legs': ['Barbell Squat', 'Romanian Deadlift'],
+            'Upper': ['Bench Press', 'Barbell Row', 'Overhead Press', 'Pull-Ups'],
+            'Full Body': ['Barbell Squat', 'Bench Press', 'Pull-Ups', 'Overhead Press']
+        };
+
+        const SET_CODES = ['1', 'W', 'F']; // Working (numbered), Warmup (W), Failure (F)
+
+        let weightUnit = localStorage.getItem(STORAGE_KEYS.UNIT) || 'kg';
+        let workouts = [];
+        let activeExercises = [];
+        let expandedWorkouts = new Set();
+
+        let reminderConfig = {
+            enabled: true,
+            time: '18:30',
+            message: "Time to close your rings and log today's workout.",
+            sound: true,
+            lastTriggeredDate: ''
+        };
+
+        /**************************************************************
+         * DATE, TIME & AUDIO HELPERS
+         **************************************************************/
+        function getTodayISO(dateObj = new Date()) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function getNowTimeHHMM() {
+            const now = new Date();
+            return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        }
+
+        function format12HourTime(hhmm) {
+            if (!hhmm) return '6:30 PM';
+            const [hStr, mStr] = hhmm.split(':');
+            let h = parseInt(hStr, 10);
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            return `${h}:${mStr} ${ampm}`;
+        }
+
+        function formatAppleDate(isoDate) {
+            if (!isoDate) return '';
+            const today = getTodayISO();
+            const yest = new Date();
+            yest.setDate(yest.getDate() - 1);
+            if (isoDate === today) return 'Today';
+            if (isoDate === getTodayISO(yest)) return 'Yesterday';
+
+            const [y, m, d] = isoDate.split('-').map(Number);
+            const dateObj = new Date(y, m - 1, d);
+            return dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        }
+
+        function uid() {
+            return 'id_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+        }
+
+        // Subtle Apple Watch / iOS Haptic-like Dual Tone Chime
+        function playAppleChime() {
+            if (!reminderConfig.sound) return;
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const now = ctx.currentTime;
+
+                // Clean two-note fifth interval (G5 -> D6)
+                const freqs = [783.99, 1174.66];
+                freqs.forEach((f, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now + i * 0.11);
+
+                    gain.gain.setValueAtTime(0.0001, now + i * 0.11);
+                    gain.gain.exponentialRampToValueAtTime(0.12, now + i * 0.11 + 0.015);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.11 + 0.45);
+
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + i * 0.11);
+                    osc.stop(now + i * 0.11 + 0.48);
+                });
+            } catch (e) {}
+        }
+
+        /**************************************************************
+         * SAMPLE HISTORY & PREVIOUS LIFT LOOKUP
+         **************************************************************/
+        function getDefaultWorkouts() {
+            const d1 = new Date();
+            d1.setDate(d1.getDate() - 1);
+            const d2 = new Date();
+            d2.setDate(d2.getDate() - 3);
+
+            return [
+                {
+                    id: 'w_sample_1',
+                    title: 'Upper Body Strength',
+                    date: getTodayISO(d1),
+                    time: '18:15',
+                    duration: 55,
+                    notes: 'Smooth bar speed on top bench set.',
+                    exercises: [
+                        {
+                            id: 'ex_1',
+                            name: 'Bench Press',
+                            sets: [
+                                { id: 's1', weight: 60, reps: 10, type: 'Warmup', done: true },
+                                { id: 's2', weight: 85, reps: 8, type: 'Working', done: true },
+                                { id: 's3', weight: 90, reps: 6, type: 'Working', done: true }
+                            ]
+                        },
+                        {
+                            id: 'ex_2',
+                            name: 'Barbell Row',
+                            sets: [
+                                { id: 's4', weight: 75, reps: 10, type: 'Working', done: true },
+                                { id: 's5', weight: 80, reps: 8, type: 'Working', done: true }
+                            ]
+                        },
+                        {
+                            id: 'ex_3',
+                            name: 'Overhead Press',
+                            sets: [
+                                { id: 's6', weight: 50, reps: 8, type: 'Working', done: true },
+                                { id: 's7', weight: 52.5, reps: 6, type: 'Failure', done: true }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'w_sample_2',
+                    title: 'Lower Body Power',
+                    date: getTodayISO(d2),
+                    time: '17:30',
+                    duration: 60,
+                    notes: 'Focused on depth and controlled tempo.',
+                    exercises: [
+                        {
+                            id: 'ex_4',
+                            name: 'Barbell Squat',
+                            sets: [
+                                { id: 's8', weight: 80, reps: 8, type: 'Warmup', done: true },
+                                { id: 's9', weight: 115, reps: 5, type: 'Working', done: true },
+                                { id: 's10', weight: 120, reps: 5, type: 'Working', done: true }
+                            ]
+                        },
+                        {
+                            id: 'ex_5',
+                            name: 'Romanian Deadlift',
+                            sets: [
+                                { id: 's11', weight: 95, reps: 10, type: 'Working', done: true },
+                                { id: 's12', weight: 100, reps: 8, type: 'Working', done: true }
+                            ]
+                        }
+                    ]
+                }
+            ];
+        }
+
+        // Find previous performance for an exercise & set index to display in the "PREV" column
+        function getPreviousSetString(exerciseName, setIndex) {
+            const norm = exerciseName.trim().toLowerCase();
+            for (const w of workouts) {
+                const matchEx = w.exercises.find(e => e.name.trim().toLowerCase() === norm);
+                if (matchEx && matchEx.sets[setIndex]) {
+                    const s = matchEx.sets[setIndex];
+                    return `${s.weight}×${s.reps}`;
+                }
+            }
+            return '—';
+        }
+
+        /**************************************************************
+         * INITIALIZATION
+         **************************************************************/
+        function initApp() {
+            // Header Date (e.g. WEDNESDAY, OCT 14)
+            const now = new Date();
+            document.getElementById('ios-header-date').textContent = now.toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'short',
+                day: 'numeric'
+            }).toUpperCase();
+
+            // Load Workouts
+            const rawWorkouts = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
+            if (rawWorkouts) {
+                try {
+                    workouts = JSON.parse(rawWorkouts);
+                } catch (e) {
+                    workouts = getDefaultWorkouts();
+                }
+            } else {
+                workouts = getDefaultWorkouts();
+                persistWorkouts();
+            }
+
+            if (workouts.length > 0) {
+                expandedWorkouts.add(workouts[0].id);
+            }
+
+            // Load Reminder Config
+            const rawReminder = localStorage.getItem(STORAGE_KEYS.REMINDER);
+            if (rawReminder) {
+                try {
+                    reminderConfig = { ...reminderConfig, ...JSON.parse(rawReminder) };
+                } catch (e) {}
+            }
+
+            renderSuggestionPills();
+            resetLoggerToDefault();
+            syncUnitDisplay();
+            refreshSummaryAndHistory();
+            syncReminderHeaderUI();
+
+            // Check reminder every second for accurate daily notification trigger
+            setInterval(evaluateReminderTick, 1000);
+        }
+
+        function persistWorkouts() {
+            localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
+        }
+
+        function persistReminder() {
+            localStorage.setItem(STORAGE_KEYS.REMINDER, JSON.stringify(reminderConfig));
+        }
+
+        /**************************************************************
+         * SEGMENTED VIEW SWITCHER
+         **************************************************************/
+        function switchSegment(view) {
+            const logView = document.getElementById('view-log');
+            const historyView = document.getElementById('view-history');
+            const btnLog = document.getElementById('seg-btn-log');
+            const btnHistory = document.getElementById('seg-btn-history');
+
+            if (view === 'log') {
+                logView.classList.remove('hidden');
+                historyView.classList.add('hidden');
+                btnLog.className = 'ios-spring py-1.5 rounded-[8px] text-[13px] font-semibold bg-ios-elevated text-white shadow-sm';
+                btnHistory.className = 'ios-spring py-1.5 rounded-[8px] text-[13px] font-semibold text-ios-label hover:text-white flex items-center justify-center gap-1.5';
+            } else {
+                logView.classList.add('hidden');
+                historyView.classList.remove('hidden');
+                btnHistory.className = 'ios-spring py-1.5 rounded-[8px] text-[13px] font-semibold bg-ios-elevated text-white shadow-sm flex items-center justify-center gap-1.5';
+                btnLog.className = 'ios-spring py-1.5 rounded-[8px] text-[13px] font-semibold text-ios-label hover:text-white';
+                renderHistoryList();
+            }
+        }
+
+        /**************************************************************
+         * UNIT TOGGLE (KG / LBS)
+         **************************************************************/
+        function toggleWeightUnit() {
+            weightUnit = weightUnit === 'kg' ? 'lbs' : 'kg';
+            localStorage.setItem(STORAGE_KEYS.UNIT, weightUnit);
+            syncUnitDisplay();
+            renderExerciseCards();
+            refreshSummaryAndHistory();
+        }
+
+        function syncUnitDisplay() {
+            const upper = weightUnit.toUpperCase();
+            document.getElementById('unit-pill-label').textContent = upper;
+            document.getElementById('metric-volume-unit').textContent = upper;
+        }
+
+        /**************************************************************
+         * WORKOUT LOGGER
+         **************************************************************/
+        function resetLoggerToDefault() {
+            document.getElementById('session-title').value = 'Push Hypertrophy';
+            document.getElementById('session-date').value = getTodayISO();
+            document.getElementById('session-time').value = getNowTimeHHMM();
+            document.getElementById('session-duration').value = '50';
+            document.getElementById('session-notes').value = '';
+
+            activeExercises = [
+                {
+                    id: uid(),
+                    name: 'Bench Press',
+                    sets: [
+                        { id: uid(), weight: 60, reps: 10, type: 'Warmup', done: true },
+                        { id: uid(), weight: 85, reps: 8, type: 'Working', done: true },
+                        { id: uid(), weight: 90, reps: 6, type: 'Working', done: false }
+                    ]
+                },
+                {
+                    id: uid(),
+                    name: 'Incline DB Press',
+                    sets: [
+                        { id: uid(), weight: 32, reps: 10, type: 'Working', done: true },
+                        { id: uid(), weight: 34, reps: 8, type: 'Working', done: false }
+                    ]
+                }
+            ];
+
+            renderExerciseCards();
+        }
+
+        function renderSuggestionPills() {
+            const container = document.getElementById('exercise-suggestions');
+            container.innerHTML = EXERCISE_SUGGESTIONS.map(name => `
+                <button type="button" onclick="appendExercise('${name.replace(/'/g, "\\'")}')"
+                    class="ios-tap px-2.5 py-1 rounded-full bg-ios-elevated text-[12px] font-medium text-white/90 hover:text-ios-fitness shrink-0 flex items-center gap-1">
+                    <i class="ph-bold ph-plus text-[10px] text-ios-fitness"></i>
+                    <span>${name}</span>
+                </button>
+            `).join('');
+        }
+
+        function applyWorkoutTemplate(splitName) {
+            document.getElementById('session-title').value = `${splitName} Session`;
+            const list = WORKOUT_TEMPLATES[splitName] || [];
+            activeExercises = list.map(name => ({
+                id: uid(),
+                name,
+                sets: [
+                    { id: uid(), weight: 60, reps: 10, type: 'Working', done: true },
+                    { id: uid(), weight: 65, reps: 8, type: 'Working', done: false }
+                ]
+            }));
+            renderExerciseCards();
+        }
+
+        function addCustomExercise() {
+            const input = document.getElementById('custom-exercise-name');
+            const name = input.value.trim();
+            if (!name) return;
+            appendExercise(name);
+            input.value = '';
+        }
+
+        function appendExercise(name) {
+            activeExercises.push({
+                id: uid(),
+                name,
+                sets: [
+                    { id: uid(), weight: 50, reps: 10, type: 'Working', done: true },
+                    { id: uid(), weight: 50, reps: 10, type: 'Working', done: false }
+                ]
+            });
+            renderExerciseCards();
+        }
+
+        function removeExercise(exId) {
+            activeExercises = activeExercises.filter(e => e.id !== exId);
+            renderExerciseCards();
+        }
+
+        function updateExerciseTitle(exId, val) {
+            const ex = activeExercises.find(e => e.id === exId);
+            if (ex) ex.name = val;
+        }
+
+        function addSetRow(exId) {
+            const ex = activeExercises.find(e => e.id === exId);
+            if (!ex) return;
+            const prev = ex.sets[ex.sets.length - 1];
+            ex.sets.push({
+                id: uid(),
+                weight: prev ? prev.weight : 50,
+                reps: prev ? prev.reps : 10,
+                type: 'Working',
+                done: false
+            });
+            renderExerciseCards();
+        }
+
+        function removeSetRow(exId, setId) {
+            const ex = activeExercises.find(e => e.id === exId);
+            if (!ex) return;
+            ex.sets = ex.sets.filter(s => s.id !== setId);
+            if (ex.sets.length === 0) {
+                removeExercise(exId);
+            } else {
+                renderExerciseCards();
+            }
+        }
+
+        // Cycle Set Badge between Working (#), Warmup (W), and Failure (F)
+        function cycleSetType(exId, setId) {
+            const ex = activeExercises.find(e => e.id === exId);
+            if (!ex) return;
+            const s = ex.sets.find(item => item.id === setId);
+            if (!s) return;
+
+            if (s.type === 'Working') s.type = 'Warmup';
+            else if (s.type === 'Warmup') s.type = 'Failure';
+            else s.type = 'Working';
+
+            renderExerciseCards();
+        }
+
+        function updateSetValue(exId, setId, field, val) {
+            const ex = activeExercises.find(e => e.id === exId);
+            if (!ex) return;
+            const s = ex.sets.find(item => item.id === setId);
+            if (!s) return;
+
+            if (field === 'done') {
+                s.done = !s.done;
+                renderExerciseCards();
+                return;
+            }
+            s[field] = Math.max(0, parseFloat(val) || 0);
+            updateLiveSessionSummary();
+        }
+
+        function renderExerciseCards() {
+            const container = document.getElementById('exercises-list');
+            const unitUpper = weightUnit.toUpperCase();
+
+            if (activeExercises.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-ios-card hairline-border rounded-[14px] p-6 text-center">
+                        <p class="text-[14px] text-ios-label">No exercises added yet. Tap a suggestion below to begin.</p>
+                    </div>
+                `;
+                updateLiveSessionSummary();
+                return;
+            }
+
+            container.innerHTML = activeExercises.map((ex) => {
+                let workingNum = 0;
+                return `
+                    <div class="bg-ios-card hairline-border rounded-[14px] overflow-hidden">
+                        <!-- Exercise Title Header -->
+                        <div class="flex items-center justify-between px-4 py-3 hairline-b">
+                            <input type="text" value="${ex.name.replace(/"/g, '&quot;')}"
+                                onchange="updateExerciseTitle('${ex.id}', this.value)"
+                                class="bg-transparent text-[16px] font-semibold text-ios-fitness focus:outline-none w-full"
+                                placeholder="Exercise Name">
+                            <button type="button" onclick="removeExercise('${ex.id}')"
+                                class="ios-tap text-ios-label hover:text-ios-red ml-2 p-1" title="Remove Exercise">
+                                <i class="ph ph-trash text-base"></i>
+                            </button>
+                        </div>
+
+                        <!-- Tabular Column Headers -->
+                        <div class="grid grid-cols-12 gap-1.5 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-ios-label items-center">
+                            <div class="col-span-2 text-center">Set</div>
+                            <div class="col-span-3 text-center">Previous</div>
+                            <div class="col-span-3 text-center">${unitUpper}</div>
+                            <div class="col-span-2 text-center">Reps</div>
+                            <div class="col-span-2 text-right pr-1.5"><i class="ph-bold ph-check"></i></div>
+                        </div>
+
+                        <!-- Set Rows -->
+                        <div class="divide-y divide-white/[0.06]">
+                            ${ex.sets.map((s, idx) => {
+                                if (s.type !== 'Warmup') workingNum++;
+                                const badgeLabel = s.type === 'Warmup' ? 'W' : (s.type === 'Failure' ? 'F' : workingNum);
+                                const badgeStyle = s.type === 'Warmup'
+                                    ? 'text-ios-orange bg-ios-orange/15'
+                                    : (s.type === 'Failure' ? 'text-ios-move bg-ios-move/15' : 'text-ios-label bg-ios-elevated');
+                                const prevText = getPreviousSetString(ex.name, idx);
+
+                                return `
+                                    <div class="grid grid-cols-12 gap-1.5 px-3 py-2 items-center transition-colors ${s.done ? 'bg-ios-fitness/[0.05]' : ''}">
+                                        <!-- Set Number / Type Button -->
+                                        <div class="col-span-2 flex justify-center">
+                                            <button type="button" onclick="cycleSetType('${ex.id}', '${s.id}')"
+                                                title="Tap to toggle Working / Warmup (W) / Failure (F)"
+                                                class="ios-tap w-7 h-7 rounded-[7px] text-[13px] font-bold tabular-nums flex items-center justify-center ${badgeStyle}">
+                                                ${badgeLabel}
+                                            </button>
+                                        </div>
+
+                                        <!-- Previous Lift Reference -->
+                                        <div class="col-span-3 text-center text-[13px] text-ios-label tabular-nums">
+                                            ${prevText}
+                                        </div>
+
+                                        <!-- Weight Input -->
+                                        <div class="col-span-3">
+                                            <input type="number" step="0.5" min="0" value="${s.weight}"
+                                                oninput="updateSetValue('${ex.id}', '${s.id}', 'weight', this.value)"
+                                                class="w-full bg-ios-elevated rounded-[7px] py-1 text-center text-[15px] font-semibold text-white tabular-nums focus:outline-none focus:ring-1 focus:ring-ios-fitness">
+                                        </div>
+
+                                        <!-- Reps Input -->
+                                        <div class="col-span-2">
+                                            <input type="number" step="1" min="0" value="${s.reps}"
+                                                oninput="updateSetValue('${ex.id}', '${s.id}', 'reps', this.value)"
+                                                class="w-full bg-ios-elevated rounded-[7px] py-1 text-center text-[15px] font-semibold text-white tabular-nums focus:outline-none focus:ring-1 focus:ring-ios-fitness">
+                                        </div>
+
+                                        <!-- Complete Check & Remove -->
+                                        <div class="col-span-2 flex items-center justify-end gap-1">
+                                            <button type="button" onclick="updateSetValue('${ex.id}', '${s.id}', 'done')"
+                                                class="ios-tap w-7 h-7 rounded-[8px] flex items-center justify-center transition-all ${
+                                                    s.done
+                                                        ? 'bg-ios-fitness text-black font-bold'
+                                                        : 'bg-ios-elevated text-ios-label hover:text-white'
+                                                }">
+                                                <i class="ph-bold ph-check text-xs"></i>
+                                            </button>
+                                            <button type="button" onclick="removeSetRow('${ex.id}', '${s.id}')"
+                                                class="ios-tap text-ios-tertiary hover:text-ios-red p-0.5" title="Delete Set">
+                                                <i class="ph ph-x text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <!-- Add Set Footer Row -->
+                        <div class="px-3 py-2 hairline-t bg-white/[0.01]">
+                            <button type="button" onclick="addSetRow('${ex.id}')"
+                                class="ios-tap w-full py-1.5 rounded-[8px] bg-ios-elevated/70 hover:bg-ios-elevated text-[13px] font-semibold text-white flex items-center justify-center gap-1">
+                                <i class="ph-bold ph-plus text-xs text-ios-fitness"></i>
+                                <span>Add Set</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            updateLiveSessionSummary();
+        }
+
+        function updateLiveSessionSummary() {
+            let totalSets = 0;
+            let totalVol = 0;
+            activeExercises.forEach(ex => {
+                ex.sets.forEach(s => {
+                    totalSets++;
+                    totalVol += (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0);
+                });
+            });
+            document.getElementById('live-summary-caption').textContent =
+                `${totalSets} Sets • ${Math.round(totalVol).toLocaleString()} ${weightUnit.toUpperCase()}`;
+        }
+
+        function saveWorkout() {
+            if (activeExercises.length === 0) {
+                showDynamicIsland('Add Exercise', 'Please add at least one exercise before saving.');
+                return;
+            }
+
+            const title = document.getElementById('session-title').value.trim() || 'Workout';
+            const date = document.getElementById('session-date').value || getTodayISO();
+            const time = document.getElementById('session-time').value || getNowTimeHHMM();
+            const duration = parseInt(document.getElementById('session-duration').value, 10) || 45;
+            const notes = document.getElementById('session-notes').value.trim();
+
+            const savedWorkout = {
+                id: uid(),
+                title,
+                date,
+                time,
+                duration,
+                notes,
+                exercises: activeExercises.map(ex => ({
+                    id: uid(),
+                    name: ex.name.trim() || 'Exercise',
+                    sets: ex.sets.map(s => ({
+                        id: uid(),
+                        weight: parseFloat(s.weight) || 0,
+                        reps: parseInt(s.reps) || 0,
+                        type: s.type || 'Working',
+                        done: true
+                    }))
+                }))
+            };
+
+            workouts.unshift(savedWorkout);
+            workouts.sort((a, b) => (`${b.date}T${b.time || '00:00'}`).localeCompare(`${a.date}T${a.time || '00:00'}`));
+
+            expandedWorkouts.add(savedWorkout.id);
+            persistWorkouts();
+            refreshSummaryAndHistory();
+            playAppleChime();
+
+            showDynamicIsland('Workout Saved', `${title} logged to your Fitness history.`);
+            switchSegment('history');
+        }
+
+        /**************************************************************
+         * SUMMARY RINGS, METRICS & HISTORY RENDERING
+         **************************************************************/
+        function refreshSummaryAndHistory() {
+            renderWeekStripAndMetrics();
+            renderHistoryList();
+            document.getElementById('history-count-pill').textContent = workouts.length;
+        }
+
+        function computeCurrentStreak() {
+            if (workouts.length === 0) return 0;
+            const dates = new Set(workouts.map(w => w.date));
+            let streak = 0;
+            const cur = new Date();
+            const todayStr = getTodayISO(cur);
+
+            if (!dates.has(todayStr)) {
+                cur.setDate(cur.getDate() - 1);
+                if (!dates.has(getTodayISO(cur))) return 0;
+            }
+
+            while (dates.has(getTodayISO(cur))) {
+                streak++;
+                cur.setDate(cur.getDate() - 1);
+            }
+            return streak;
+        }
+
+        function renderWeekStripAndMetrics() {
+            const now = new Date();
+            const todayISO = getTodayISO(now);
+            const dayIdx = now.getDay(); // 0 Sun .. 6 Sat
+            const offsetToMonday = dayIdx === 0 ? -6 : 1 - dayIdx;
+
+            const monday = new Date(now);
+            monday.setDate(now.getDate() + offsetToMonday);
+
+            const letters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+            const loggedDates = new Set(workouts.map(w => w.date));
+
+            const weekDatesSet = new Set();
+            let stripHTML = '';
+
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(monday);
+                d.setDate(monday.getDate() + i);
+                const iso = getTodayISO(d);
+                weekDatesSet.add(iso);
+
+                const done = loggedDates.has(iso);
+                const isToday = iso === todayISO;
+
+                stripHTML += `
+                    <div class="flex flex-col items-center gap-1.5">
+                        <span class="text-[11px] font-semibold ${isToday ? 'text-white' : 'text-ios-label'}">${letters[i]}</span>
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center tabular-nums text-[12px] font-bold transition-all ${
+                            done
+                                ? 'bg-ios-fitness text-black shadow-[0_0_10px_rgba(164,255,0,0.25)]'
+                                : isToday
+                                    ? 'border-2 border-ios-fitness text-white'
+                                    : 'border border-white/15 text-ios-label'
+                        }">
+                            ${done ? '<i class="ph-bold ph-check text-xs"></i>' : d.getDate()}
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('week-rings-strip').innerHTML = stripHTML;
+
+            // Calculate Week Volume
+            let weekVol = 0;
+            workouts.forEach(w => {
+                if (weekDatesSet.has(w.date)) {
+                    w.exercises.forEach(ex => {
+                        ex.sets.forEach(s => {
+                            weekVol += (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0);
+                        });
+                    });
+                }
+            });
+
+            document.getElementById('metric-streak').textContent = computeCurrentStreak();
+            document.getElementById('metric-volume').textContent = weekVol >= 10000
+                ? (weekVol / 1000).toFixed(1) + 'k'
+                : Math.round(weekVol).toLocaleString();
+            document.getElementById('metric-sessions').textContent = workouts.length;
+
+            // Status caption in header
+            const statusBadge = document.getElementById('today-status-badge');
+            if (loggedDates.has(todayISO)) {
+                statusBadge.innerHTML = `<span class="text-ios-fitness font-semibold">● Completed Today</span>`;
+            } else {
+                statusBadge.innerHTML = `<span class="text-ios-label">Not Logged Today</span>`;
+            }
+        }
+
+        function renderHistoryList() {
+            const container = document.getElementById('history-list');
+            const query = (document.getElementById('history-search').value || '').toLowerCase().trim();
+            const unitUpper = weightUnit.toUpperCase();
+
+            const filtered = workouts.filter(w => {
+                if (!query) return true;
+                return w.title.toLowerCase().includes(query) ||
+                    w.exercises.some(e => e.name.toLowerCase().includes(query));
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-ios-card hairline-border rounded-[16px] p-8 text-center">
+                        <p class="text-[15px] font-medium text-white">No Workouts</p>
+                        <p class="text-[13px] text-ios-label mt-1">Logged sessions will appear here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(w => {
+                const expanded = expandedWorkouts.has(w.id);
+                let vol = 0;
+                let setsCount = 0;
+                w.exercises.forEach(e => {
+                    e.sets.forEach(s => {
+                        setsCount++;
+                        vol += (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0);
+                    });
+                });
+
+                return `
+                    <div class="bg-ios-card hairline-border rounded-[16px] overflow-hidden">
+                        <!-- Summary Row -->
+                        <div onclick="toggleHistoryExpand('${w.id}')" class="p-4 cursor-pointer flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3.5 min-w-0">
+                                <div class="w-10 h-10 rounded-full bg-ios-fitness/15 flex items-center justify-center text-ios-fitness shrink-0">
+                                    <i class="ph-fill ph-barbell text-xl"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-[16px] font-semibold text-white truncate">${w.title}</h3>
+                                    </div>
+                                    <p class="text-[12px] text-ios-label tabular-nums mt-0.5">
+                                        ${formatAppleDate(w.date)} • ${format12HourTime(w.time)} • ${w.duration || 45}m
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="text-right shrink-0 flex items-center gap-2.5">
+                                <div>
+                                    <span class="text-[15px] font-bold text-ios-fitness tabular-nums block">${Math.round(vol).toLocaleString()} ${unitUpper}</span>
+                                    <span class="text-[11px] text-ios-label tabular-nums">${setsCount} Sets</span>
+                                </div>
+                                <i class="ph-bold ${expanded ? 'ph-caret-up' : 'ph-caret-down'} text-ios-label text-xs"></i>
+                            </div>
+                        </div>
+
+                        <!-- Expanded Details -->
+                        <div class="${expanded ? 'block' : 'hidden'} px-4 pb-4 pt-3 hairline-t space-y-3 bg-black/25">
+                            ${w.notes ? `<p class="text-[13px] text-ios-label italic">"${w.notes}"</p>` : ''}
+
+                            <div class="space-y-2">
+                                ${w.exercises.map(ex => `
+                                    <div class="bg-ios-elevated/60 rounded-[10px] p-2.5">
+                                        <div class="flex items-center justify-between text-[13px] font-semibold text-white mb-1.5">
+                                            <span>${ex.name}</span>
+                                            <span class="text-[11px] text-ios-label tabular-nums">${ex.sets.length} sets</span>
+                                        </div>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            ${ex.sets.map((s, idx) => `
+                                                <span class="px-2 py-0.5 rounded-[6px] bg-black/40 text-[12px] tabular-nums text-white/90">
+                                                    <span class="text-ios-label mr-1">${s.type === 'Warmup' ? 'W' : idx + 1}</span>${s.weight}${weightUnit} × ${s.reps}
+                                                </span>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+
+                            <div class="flex items-center justify-between pt-1">
+                                <button onclick="repeatWorkoutInLogger('${w.id}')" class="ios-tap text-[13px] font-semibold text-ios-fitness flex items-center gap-1">
+                                    <i class="ph-bold ph-arrow-counter-clockwise"></i> Repeat Workout
+                                </button>
+                                <button onclick="promptDeleteWorkout('${w.id}')" class="ios-tap text-[13px] font-medium text-ios-red">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleHistoryExpand(id) {
+            if (expandedWorkouts.has(id)) expandedWorkouts.delete(id);
+            else expandedWorkouts.add(id);
+            renderHistoryList();
+        }
+
+        function repeatWorkoutInLogger(id) {
+            const source = workouts.find(w => w.id === id);
+            if (!source) return;
+
+            document.getElementById('session-title').value = source.title;
+            document.getElementById('session-date').value = getTodayISO();
+            document.getElementById('session-time').value = getNowTimeHHMM();
+            document.getElementById('session-duration').value = source.duration || 50;
+            document.getElementById('session-notes').value = source.notes || '';
+
+            activeExercises = source.exercises.map(ex => ({
+                id: uid(),
+                name: ex.name,
+                sets: ex.sets.map(s => ({
+                    id: uid(),
+                    weight: s.weight,
+                    reps: s.reps,
+                    type: s.type || 'Working',
+                    done: false
+                }))
+            }));
+
+            renderExerciseCards();
+            switchSegment('log');
+            showDynamicIsland('Workout Loaded', `${source.title} copied into logger.`);
+        }
+
+        function promptDeleteWorkout(id) {
+            openIOSDialog(
+                'Delete Workout?',
+                'This workout and its sets will be permanently deleted.',
+                () => {
+                    workouts = workouts.filter(w => w.id !== id);
+                    persistWorkouts();
+                    refreshSummaryAndHistory();
+                }
+            );
+        }
+
+        function promptClearAllHistory() {
+            openIOSDialog(
+                'Delete All Workouts?',
+                'This will permanently clear all workout history from this device.',
+                () => {
+                    workouts = [];
+                    persistWorkouts();
+                    refreshSummaryAndHistory();
+                }
+            );
+        }
+
+        /**************************************************************
+         * DAILY REMINDER SHEET & DYNAMIC ISLAND ENGINE
+         **************************************************************/
+        function openReminderSheet() {
+            document.getElementById('sheet-reminder-enabled').checked = reminderConfig.enabled;
+            document.getElementById('sheet-reminder-time').value = reminderConfig.time;
+            document.getElementById('sheet-reminder-sound').checked = reminderConfig.sound;
+            document.getElementById('sheet-reminder-msg').value = reminderConfig.message;
+            updateOSPermissionBadge();
+
+            const wrapper = document.getElementById('reminder-sheet-wrapper');
+            wrapper.classList.remove('hidden');
+            wrapper.classList.add('flex');
+        }
+
+        function closeReminderSheet() {
+            const wrapper = document.getElementById('reminder-sheet-wrapper');
+            wrapper.classList.add('hidden');
+            wrapper.classList.remove('flex');
+        }
+
+        function saveReminderSheet() {
+            reminderConfig.enabled = document.getElementById('sheet-reminder-enabled').checked;
+            reminderConfig.time = document.getElementById('sheet-reminder-time').value || '18:30';
+            reminderConfig.sound = document.getElementById('sheet-reminder-sound').checked;
+            reminderConfig.message = document.getElementById('sheet-reminder-msg').value.trim() || "Time to close your rings and log today's workout.";
+
+            persistReminder();
+            syncReminderHeaderUI();
+            closeReminderSheet();
+            showDynamicIsland('Reminder Updated', reminderConfig.enabled ? `Scheduled daily for ${format12HourTime(reminderConfig.time)}.` : 'Daily workout notifications paused.');
+        }
+
+        function syncReminderHeaderUI() {
+            const bell = document.getElementById('header-bell-icon');
+            const label = document.getElementById('header-reminder-time');
+
+            if (reminderConfig.enabled) {
+                bell.className = 'ph-fill ph-bell text-ios-orange text-xs';
+                label.textContent = format12HourTime(reminderConfig.time);
+                label.className = 'tabular-nums text-white font-medium';
+            } else {
+                bell.className = 'ph ph-bell-slash text-ios-label text-xs';
+                label.textContent = 'Off';
+                label.className = 'text-ios-label';
+            }
+        }
+
+        function requestOSNotifications() {
+            if (!('Notification' in window)) {
+                showDynamicIsland('In-App Banner Active', 'Dynamic Island & audio chime are active.');
+                return;
+            }
+            Notification.requestPermission().then(perm => {
+                updateOSPermissionBadge();
+                if (perm === 'granted') {
+                    triggerWorkoutReminder(true);
+                }
+            }).catch(() => {});
+        }
+
+        function updateOSPermissionBadge() {
+            const badge = document.getElementById('os-perm-badge');
+            if ('Notification' in window && Notification.permission === 'granted') {
+                badge.textContent = 'Allowed';
+                badge.className = 'text-[13px] text-ios-green font-medium';
+            } else {
+                badge.textContent = 'Enable';
+                badge.className = 'text-[13px] text-ios-orange font-medium';
+            }
+        }
+
+        function evaluateReminderTick() {
+            if (!reminderConfig.enabled) return;
+            const now = new Date();
+            const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const todayISO = getTodayISO(now);
+
+            if (hhmm === reminderConfig.time && reminderConfig.lastTriggeredDate !== todayISO) {
+                const loggedToday = workouts.some(w => w.date === todayISO);
+                if (!loggedToday) {
+                    reminderConfig.lastTriggeredDate = todayISO;
+                    persistReminder();
+                    triggerWorkoutReminder(false);
+                }
+            }
+        }
+
+        function triggerWorkoutReminder(isTest = false) {
+            playAppleChime();
+            const title = isTest ? 'Test Reminder' : 'Workout Reminder';
+            const body = reminderConfig.message || "Time to close your rings and log today's workout.";
+
+            showDynamicIsland(title, body);
+
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    new Notification(`Fitness — ${title}`, { body });
+                } catch (e) {}
+            }
+        }
+
+        let islandTimer = null;
+        function showDynamicIsland(title, body) {
+            const island = document.getElementById('dynamic-island');
+            document.getElementById('island-title').textContent = title;
+            document.getElementById('island-body').textContent = body;
+
+            island.classList.remove('island-hidden');
+            island.classList.add('island-visible');
+
+            if (islandTimer) clearTimeout(islandTimer);
+            islandTimer = setTimeout(hideDynamicIsland, 6000);
+        }
+
+        function hideDynamicIsland() {
+            const island = document.getElementById('dynamic-island');
+            island.classList.remove('island-visible');
+            island.classList.add('island-hidden');
+        }
+
+        function handleIslandLogAction() {
+            hideDynamicIsland();
+            closeReminderSheet();
+            switchSegment('log');
+            document.getElementById('session-title').focus();
+        }
+
+        /**************************************************************
+         * iOS DIALOG HELPER
+         **************************************************************/
+        function openIOSDialog(title, desc, onConfirm) {
+            const dialog = document.getElementById('ios-dialog');
+            document.getElementById('ios-dialog-title').textContent = title;
+            document.getElementById('ios-dialog-desc').textContent = desc;
+
+            const close = () => {
+                dialog.classList.add('hidden');
+                dialog.classList.remove('flex');
+            };
+
+            document.getElementById('ios-dialog-cancel').onclick = close;
+            document.getElementById('ios-dialog-confirm').onclick = () => {
+                close();
+                if (typeof onConfirm === 'function') onConfirm();
+            };
+
+            dialog.classList.remove('hidden');
+            dialog.classList.add('flex');
+        }
+
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
