@@ -133,6 +133,22 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+
+        /* Interactive Spotlight Tour Ring & Popover */
+        #tour-spotlight {
+            transition: top 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                        left 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                        width 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                        height 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                        opacity 0.25s ease;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.78), 0 0 0 2.5px #A4FF00, 0 0 24px rgba(164, 255, 0, 0.35);
+        }
+        #tour-popover {
+            transition: top 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                        left 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                        opacity 0.25s ease,
+                        transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+        }
     </style>
 </head>
 <body class="min-h-screen bg-oled text-white selection:bg-ios-fitness selection:text-black">
@@ -172,14 +188,19 @@
                 <p id="ios-header-date" class="text-[12px] font-semibold uppercase tracking-wider text-ios-label tabular-nums">
                     WEDNESDAY, OCT 14
                 </p>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5">
+                    <!-- Help / How It Works Guide Button -->
+                    <button id="tour-btn-help" onclick="openWelcomeSheet()" title="How It Works & Interactive Tour" class="ios-tap w-7 h-7 rounded-full bg-ios-card hairline-border text-ios-fitness flex items-center justify-center text-[13px] font-bold">
+                        <i class="ph-bold ph-question"></i>
+                    </button>
+
                     <!-- Unit Pill (KG / LBS) -->
                     <button onclick="toggleWeightUnit()" class="ios-tap h-7 px-2.5 rounded-full bg-ios-card hairline-border text-[12px] font-semibold text-ios-label hover:text-white tabular-nums flex items-center gap-1">
                         <span id="unit-pill-label" class="text-white">KG</span>
                     </button>
 
                     <!-- Daily Reminder Pill -->
-                    <button onclick="openReminderSheet()" class="ios-tap h-7 px-3 rounded-full bg-ios-card hairline-border flex items-center gap-1.5 text-[12px] font-medium">
+                    <button id="tour-target-reminder" onclick="openReminderSheet()" class="ios-tap h-7 px-3 rounded-full bg-ios-card hairline-border flex items-center gap-1.5 text-[12px] font-medium">
                         <i id="header-bell-icon" class="ph-fill ph-bell text-ios-orange text-xs"></i>
                         <span id="header-reminder-time" class="tabular-nums text-white font-medium">6:30 PM</span>
                     </button>
@@ -192,7 +213,7 @@
         </header>
 
         <!-- Compact Apple Fitness Activity & Week Card -->
-        <section class="bg-ios-card hairline-border rounded-[18px] p-4 mb-5">
+        <section id="tour-target-activity" class="bg-ios-card hairline-border rounded-[18px] p-4 mb-5">
             <!-- 7-Day Week Ring Strip (M T W T F S S) -->
             <div class="flex items-center justify-between mb-3.5 pb-3.5 hairline-b" id="week-rings-strip">
                 <!-- Populated via JS -->
@@ -238,10 +259,35 @@
         <!-- VIEW 1: LOG WORKOUT -->
         <main id="view-log" class="space-y-5">
 
+            <!-- Dismissible First-Time Quick Guide Card -->
+            <div id="quick-tip-banner" class="bg-[#1C1C1E] hairline-border rounded-[14px] p-3.5 flex items-start justify-between gap-3">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full bg-ios-fitness/15 text-ios-fitness flex items-center justify-center shrink-0 mt-0.5">
+                        <i class="ph-fill ph-sparkle text-base"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <p class="text-[13px] font-semibold text-white">How to Log in 3 Steps</p>
+                            <button type="button" onclick="startInteractiveTour()" class="text-[11px] font-semibold text-ios-fitness underline">
+                                30s Tour
+                            </button>
+                        </div>
+                        <p class="text-[12px] text-ios-label leading-relaxed mt-0.5">
+                            1. Pick a split or name your workout below.<br>
+                            2. Enter <span class="text-white font-medium">Weight & Reps</span> and tap <span class="text-ios-fitness font-semibold">✓</span> as you finish each set.<br>
+                            3. Tap <span class="text-ios-fitness font-medium">Finish & Save Workout</span> at the bottom.
+                        </p>
+                    </div>
+                </div>
+                <button type="button" onclick="dismissQuickTipBanner()" class="ios-tap text-ios-label hover:text-white p-1" aria-label="Dismiss tip">
+                    <i class="ph-bold ph-x text-xs"></i>
+                </button>
+            </div>
+
             <!-- Session Details (iOS Inset Grouped List) -->
-            <div>
+            <div id="tour-target-session">
                 <div class="flex items-center justify-between px-1 mb-1.5">
-                    <span class="text-[12px] font-medium uppercase tracking-wider text-ios-label">Session Details</span>
+                    <span class="text-[12px] font-medium uppercase tracking-wider text-ios-label">1. Session Info & Templates</span>
                     <!-- Quick Split Pills -->
                     <div class="flex items-center gap-1 overflow-x-auto no-scrollbar">
                         <button type="button" onclick="applyWorkoutTemplate('Push')" class="ios-tap px-2 py-0.5 rounded-full bg-ios-card hairline-border text-[11px] font-medium text-ios-label hover:text-white">Push</button>
@@ -288,20 +334,33 @@
             <!-- Exercises Section -->
             <div>
                 <div class="flex items-center justify-between px-1 mb-1.5">
-                    <span class="text-[12px] font-medium uppercase tracking-wider text-ios-label">Exercises</span>
-                    <span id="live-summary-caption" class="text-[12px] text-ios-label tabular-nums">0 Sets • 0 KG</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[12px] font-medium uppercase tracking-wider text-ios-label">2. Exercises & Sets</span>
+                        <span id="live-summary-caption" class="text-[11px] text-ios-fitness font-medium tabular-nums">0 Sets • 0 KG</span>
+                    </div>
+                    <button type="button" onclick="clearLoggerToBlank()" class="ios-tap text-[11px] font-medium text-ios-label hover:text-white">
+                        Start Blank
+                    </button>
                 </div>
 
                 <!-- Dynamic Exercise Cards Container -->
-                <div id="exercises-list" class="space-y-3.5">
-                    <!-- Populated via JS -->
+                <div id="tour-target-exercises">
+                    <div id="exercises-list" class="space-y-3.5">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <!-- Micro-Legend Helper for Set Controls -->
+                <div class="flex items-center justify-between px-2 mt-2 text-[11px] text-ios-label">
+                    <span><strong class="text-white/80">Tip:</strong> Tap set # to switch <span class="text-ios-orange font-semibold">W</span> (Warmup) or <span class="text-ios-move font-semibold">F</span> (Failure)</span>
+                    <span>Tap <span class="text-ios-fitness font-bold">✓</span> when done</span>
                 </div>
 
                 <!-- Add Exercise Bar & Quick Suggestions -->
-                <div class="mt-3.5 bg-ios-card hairline-border rounded-[14px] p-3">
+                <div id="tour-target-add-exercise" class="mt-3 bg-ios-card hairline-border rounded-[14px] p-3">
                     <div class="flex items-center gap-2">
                         <i class="ph ph-plus-circle text-ios-fitness text-lg shrink-0"></i>
-                        <input id="custom-exercise-name" type="text" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomExercise();}" placeholder="Add exercise (e.g. Incline Bench Press)..." class="bg-transparent text-[14px] text-white placeholder-ios-label focus:outline-none w-full">
+                        <input id="custom-exercise-name" type="text" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomExercise();}" placeholder="Type an exercise name or tap below..." class="bg-transparent text-[14px] text-white placeholder-ios-label focus:outline-none w-full">
                         <button type="button" onclick="addCustomExercise()" class="ios-tap px-3 py-1 rounded-[8px] bg-ios-elevated text-[13px] font-semibold text-ios-fitness shrink-0">
                             Add
                         </button>
@@ -426,6 +485,95 @@
         </div>
     </div>
 
+    <!-- Apple-Style "Welcome to Fitness" Onboarding Modal Sheet -->
+    <div id="welcome-sheet-wrapper" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-0 sm:p-4">
+        <div onclick="closeWelcomeSheet()" class="sheet-backdrop absolute inset-0"></div>
+        <div class="sheet-panel relative w-full max-w-[430px] rounded-t-[28px] sm:rounded-[28px] p-6 hairline-border z-10 shadow-2xl">
+            <div class="w-9 h-1 rounded-full bg-white/20 mx-auto mb-5 sm:hidden"></div>
+
+            <!-- Header Icon & Title -->
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 rounded-[18px] bg-ios-fitness/15 hairline-border flex items-center justify-center text-ios-fitness mx-auto mb-3 shadow-inner">
+                    <i class="ph-fill ph-person-simple-run text-3xl"></i>
+                </div>
+                <h2 class="text-[24px] font-bold tracking-tight text-white">Welcome to Fitness</h2>
+                <p class="text-[14px] text-ios-label mt-1">Effortless manual workout tracking & daily reminders.</p>
+            </div>
+
+            <!-- 3 Simple Steps -->
+            <div class="space-y-4 mb-6">
+                <div class="flex items-start gap-3.5">
+                    <div class="w-9 h-9 rounded-full bg-ios-fitness/15 text-ios-fitness flex items-center justify-center shrink-0 mt-0.5">
+                        <i class="ph-fill ph-list-checks text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-[15px] font-semibold text-white">1. Name & Pick Exercises</h3>
+                        <p class="text-[13px] text-ios-label leading-snug mt-0.5">Tap a preset split (<span class="text-white">Push, Pull, Legs</span>) or tap any exercise chip to build your session in seconds.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3.5">
+                    <div class="w-9 h-9 rounded-full bg-ios-move/15 text-ios-move flex items-center justify-center shrink-0 mt-0.5">
+                        <i class="ph-bold ph-check-circle text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-[15px] font-semibold text-white">2. Tap to Log Your Sets</h3>
+                        <p class="text-[13px] text-ios-label leading-snug mt-0.5">See your <span class="text-white">Previous</span> lift automatically, enter Weight & Reps, and tap <span class="text-ios-fitness font-bold">✓</span> as you complete each set.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3.5">
+                    <div class="w-9 h-9 rounded-full bg-ios-orange/15 text-ios-orange flex items-center justify-center shrink-0 mt-0.5">
+                        <i class="ph-fill ph-bell-ringing text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-[15px] font-semibold text-white">3. Daily Smart Reminder</h3>
+                        <p class="text-[13px] text-ios-label leading-snug mt-0.5">Set your workout time so the <span class="text-white">Dynamic Island</span> & audio chime remind you if you haven't logged yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-2.5">
+                <button type="button" onclick="startInteractiveTour()" class="ios-tap w-full py-3.5 rounded-[14px] bg-ios-fitness text-black font-bold text-[15px] flex items-center justify-center gap-2 shadow-lg">
+                    <i class="ph-bold ph-compass text-lg"></i>
+                    <span>Take 30-Second Interactive Tour</span>
+                </button>
+                <button type="button" onclick="closeWelcomeSheet()" class="ios-tap w-full py-2.5 rounded-[12px] text-[14px] font-medium text-ios-label hover:text-white">
+                    Skip for Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Guided Coachmark Tour Overlay (Spotlight + Floating iOS Popover) -->
+    <div id="tour-overlay" class="fixed inset-0 z-50 hidden pointer-events-auto">
+        <!-- Spotlight Cutout Box -->
+        <div id="tour-spotlight" class="fixed rounded-[18px] pointer-events-none"></div>
+
+        <!-- Floating iOS Coachmark Card -->
+        <div id="tour-popover" class="fixed w-[90%] max-w-[340px] bg-[#1C1C1E]/95 backdrop-blur-2xl hairline-border rounded-[18px] p-4 shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-10">
+            <div class="flex items-center justify-between mb-1.5">
+                <span id="tour-step-badge" class="text-[11px] font-bold uppercase tracking-wider text-ios-fitness tabular-nums">STEP 1 OF 5</span>
+                <button type="button" onclick="endInteractiveTour()" class="ios-tap text-[12px] font-medium text-ios-label hover:text-white">
+                    End Tour
+                </button>
+            </div>
+            <h4 id="tour-step-title" class="text-[16px] font-bold text-white mb-1">7-Day Activity Strip</h4>
+            <p id="tour-step-desc" class="text-[13px] text-ios-label leading-relaxed mb-4">
+                Each day you log a workout, its ring lights up in Fitness Green and builds your daily streak.
+            </p>
+            <div class="flex items-center justify-between pt-2 hairline-t">
+                <button type="button" id="tour-prev-btn" onclick="prevTourStep()" class="ios-tap px-3 py-1.5 rounded-[8px] bg-ios-elevated text-[13px] font-medium text-white">
+                    Back
+                </button>
+                <button type="button" id="tour-next-btn" onclick="nextTourStep()" class="ios-tap px-4 py-1.5 rounded-[8px] bg-ios-fitness text-black text-[13px] font-bold">
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         /**************************************************************
          * STATE & STORAGE KEYS
@@ -433,7 +581,9 @@
         const STORAGE_KEYS = {
             WORKOUTS: 'aetherfit_workouts_v1',
             REMINDER: 'aetherfit_reminder_v1',
-            UNIT: 'aetherfit_unit_v1'
+            UNIT: 'aetherfit_unit_v1',
+            ONBOARDED: 'aetherfit_onboarded_v2',
+            TIP_DISMISSED: 'aetherfit_tip_dismissed_v1'
         };
 
         const EXERCISE_SUGGESTIONS = [
@@ -675,8 +825,24 @@
             refreshSummaryAndHistory();
             syncReminderHeaderUI();
 
+            // Check if Quick Tip Banner was dismissed previously
+            if (localStorage.getItem(STORAGE_KEYS.TIP_DISMISSED) === '1') {
+                const tipBanner = document.getElementById('quick-tip-banner');
+                if (tipBanner) tipBanner.classList.add('hidden');
+            }
+
+            // Show Apple "Welcome to Fitness" onboarding sheet on first visit
+            if (!localStorage.getItem(STORAGE_KEYS.ONBOARDED)) {
+                setTimeout(() => {
+                    openWelcomeSheet();
+                }, 350);
+            }
+
             // Check reminder every second for accurate daily notification trigger
             setInterval(evaluateReminderTick, 1000);
+            window.addEventListener('resize', () => {
+                if (activeTourIndex >= 0) positionTourSpotlight();
+            });
         }
 
         function persistWorkouts() {
@@ -731,33 +897,39 @@
          * WORKOUT LOGGER
          **************************************************************/
         function resetLoggerToDefault() {
-            document.getElementById('session-title').value = 'Push Hypertrophy';
+            document.getElementById('session-title').value = 'Upper Body Strength';
             document.getElementById('session-date').value = getTodayISO();
             document.getElementById('session-time').value = getNowTimeHHMM();
-            document.getElementById('session-duration').value = '50';
+            document.getElementById('session-duration').value = '45';
             document.getElementById('session-notes').value = '';
 
+            // 1 simple starter exercise with 2 sets so a new user immediately sees how it works
             activeExercises = [
                 {
                     id: uid(),
                     name: 'Bench Press',
                     sets: [
                         { id: uid(), weight: 60, reps: 10, type: 'Warmup', done: true },
-                        { id: uid(), weight: 85, reps: 8, type: 'Working', done: true },
-                        { id: uid(), weight: 90, reps: 6, type: 'Working', done: false }
-                    ]
-                },
-                {
-                    id: uid(),
-                    name: 'Incline DB Press',
-                    sets: [
-                        { id: uid(), weight: 32, reps: 10, type: 'Working', done: true },
-                        { id: uid(), weight: 34, reps: 8, type: 'Working', done: false }
+                        { id: uid(), weight: 80, reps: 8, type: 'Working', done: false }
                     ]
                 }
             ];
 
             renderExerciseCards();
+        }
+
+        function clearLoggerToBlank() {
+            document.getElementById('session-title').value = '';
+            document.getElementById('session-notes').value = '';
+            activeExercises = [];
+            renderExerciseCards();
+            showDynamicIsland('Started Blank', 'Tap any exercise chip below to build your workout.');
+        }
+
+        function dismissQuickTipBanner() {
+            const banner = document.getElementById('quick-tip-banner');
+            if (banner) banner.classList.add('hidden');
+            localStorage.setItem(STORAGE_KEYS.TIP_DISMISSED, '1');
         }
 
         function renderSuggestionPills() {
@@ -1438,6 +1610,152 @@
 
             dialog.classList.remove('hidden');
             dialog.classList.add('flex');
+        }
+
+        /**************************************************************
+         * APPLE ONBOARDING SHEET & INTERACTIVE SPOTLIGHT TOUR
+         **************************************************************/
+        const TOUR_STEPS = [
+            {
+                targetId: 'tour-target-activity',
+                title: '7-Day Activity & Streak',
+                desc: 'Whenever you log a workout, that day’s circle fills in Apple Fitness Green and automatically updates your daily streak and weekly volume.'
+            },
+            {
+                targetId: 'tour-target-session',
+                title: 'Pick a Split or Name Session',
+                desc: 'Tap a quick template (Push, Pull, Legs, Upper, Full) to pre-load exercises in one tap, or enter your own workout title, date, and duration.'
+            },
+            {
+                targetId: 'tour-target-exercises',
+                title: 'Log Weight, Reps & Checkmarks',
+                desc: 'See your last lift under PREVIOUS. Tap the set number (1) to switch between Warmup (W) or Failure (F), and tap the green ✓ as you finish each set.'
+            },
+            {
+                targetId: 'tour-target-add-exercise',
+                title: 'Add Exercises in One Tap',
+                desc: 'Tap any suggested exercise pill (like Barbell Squat or Pull-Ups) or type your own custom exercise name and tap Add.'
+            },
+            {
+                targetId: 'tour-target-reminder',
+                title: 'Daily Smart Reminder',
+                desc: 'Tap this bell anytime to set your daily workout reminder time and test the Dynamic Island notification & audio chime.'
+            }
+        ];
+
+        let activeTourIndex = -1;
+
+        function openWelcomeSheet() {
+            const wrapper = document.getElementById('welcome-sheet-wrapper');
+            wrapper.classList.remove('hidden');
+            wrapper.classList.add('flex');
+        }
+
+        function closeWelcomeSheet() {
+            const wrapper = document.getElementById('welcome-sheet-wrapper');
+            wrapper.classList.add('hidden');
+            wrapper.classList.remove('flex');
+            localStorage.setItem(STORAGE_KEYS.ONBOARDED, '1');
+        }
+
+        function startInteractiveTour() {
+            closeWelcomeSheet();
+            switchSegment('log');
+
+            // Ensure there is at least 1 exercise visible for Step 3
+            if (activeExercises.length === 0) {
+                resetLoggerToDefault();
+            }
+
+            activeTourIndex = 0;
+            const overlay = document.getElementById('tour-overlay');
+            overlay.classList.remove('hidden');
+            renderCurrentTourStep();
+        }
+
+        function nextTourStep() {
+            if (activeTourIndex < TOUR_STEPS.length - 1) {
+                activeTourIndex++;
+                renderCurrentTourStep();
+            } else {
+                endInteractiveTour();
+                showDynamicIsland('Tour Complete', 'You’re ready to log your first workout!');
+            }
+        }
+
+        function prevTourStep() {
+            if (activeTourIndex > 0) {
+                activeTourIndex--;
+                renderCurrentTourStep();
+            }
+        }
+
+        function endInteractiveTour() {
+            activeTourIndex = -1;
+            const overlay = document.getElementById('tour-overlay');
+            overlay.classList.add('hidden');
+            localStorage.setItem(STORAGE_KEYS.ONBOARDED, '1');
+        }
+
+        function renderCurrentTourStep() {
+            const step = TOUR_STEPS[activeTourIndex];
+            if (!step) return;
+
+            const el = document.getElementById(step.targetId);
+            if (!el) return;
+
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            document.getElementById('tour-step-badge').textContent = `STEP ${activeTourIndex + 1} OF ${TOUR_STEPS.length}`;
+            document.getElementById('tour-step-title').textContent = step.title;
+            document.getElementById('tour-step-desc').textContent = step.desc;
+
+            const prevBtn = document.getElementById('tour-prev-btn');
+            const nextBtn = document.getElementById('tour-next-btn');
+
+            prevBtn.style.visibility = activeTourIndex === 0 ? 'hidden' : 'visible';
+            nextBtn.textContent = activeTourIndex === TOUR_STEPS.length - 1 ? 'Done' : 'Next';
+
+            setTimeout(positionTourSpotlight, 220);
+        }
+
+        function positionTourSpotlight() {
+            if (activeTourIndex < 0) return;
+            const step = TOUR_STEPS[activeTourIndex];
+            const el = document.getElementById(step.targetId);
+            if (!el) return;
+
+            const rect = el.getBoundingClientRect();
+            const pad = 6;
+            const spotlight = document.getElementById('tour-spotlight');
+            const popover = document.getElementById('tour-popover');
+
+            const top = Math.max(8, rect.top - pad);
+            const left = Math.max(8, rect.left - pad);
+            const width = Math.min(window.innerWidth - 16, rect.width + pad * 2);
+            const height = rect.height + pad * 2;
+
+            spotlight.style.top = `${top}px`;
+            spotlight.style.left = `${left}px`;
+            spotlight.style.width = `${width}px`;
+            spotlight.style.height = `${height}px`;
+
+            // Position floating popover either below or above the spotlight target
+            const popHeight = popover.offsetHeight || 175;
+            const spaceBelow = window.innerHeight - (top + height);
+            let popTop = top + height + 14;
+
+            if (spaceBelow < popHeight + 24 && top > popHeight + 24) {
+                popTop = top - popHeight - 14;
+            } else if (spaceBelow < popHeight + 24) {
+                popTop = Math.max(16, window.innerHeight - popHeight - 16);
+            }
+
+            const popWidth = Math.min(340, window.innerWidth * 0.9);
+            const centeredLeft = Math.max(16, Math.min(window.innerWidth - popWidth - 16, (window.innerWidth - popWidth) / 2));
+
+            popover.style.top = `${popTop}px`;
+            popover.style.left = `${centeredLeft}px`;
         }
 
         window.addEventListener('DOMContentLoaded', initApp);
