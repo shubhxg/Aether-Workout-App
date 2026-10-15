@@ -1,0 +1,154 @@
+/**
+ * Aetherfit - Semantic Theme Variables
+ * Modern iOS Dark / Apple Fitness Theme Design Tokens
+ */
+
+:root {
+    color-scheme: dark;
+
+    /* ==========================================================================
+       1. Base Color Palette (Hex & RGB for alpha composition)
+       ========================================================================== */
+    --color-oled: #000000;
+    --color-oled-rgb: 0 0 0;
+
+    --color-ios-card: #1C1C1E;
+    --color-ios-card-rgb: 28 28 30;
+
+    --color-ios-elevated: #2C2C2E;
+    --color-ios-elevated-rgb: 44 44 46;
+
+    --color-ios-input: #3A3A3C;
+    --color-ios-input-rgb: 58 58 60;
+
+    --color-ios-label: #8E8E93;
+    --color-ios-label-rgb: 142 142 147;
+
+    --color-ios-tertiary: #48484A;
+    --color-ios-tertiary-rgb: 72 72 74;
+
+    /* Apple Fitness Activity Accents */
+    --color-ios-fitness: #A4FF00;
+    --color-ios-fitness-rgb: 164 255 0;
+
+    --color-ios-move: #FA114F;
+    --color-ios-move-rgb: 250 17 79;
+
+    --color-ios-stand: #00F5EA;
+    --color-ios-stand-rgb: 0 245 234;
+
+    --color-ios-orange: #FF9F0A;
+    --color-ios-orange-rgb: 255 159 10;
+
+    --color-ios-green: #30D158;
+    --color-ios-green-rgb: 48 209 88;
+
+    --color-ios-red: #FF453A;
+    --color-ios-red-rgb: 255 69 58;
+
+    --color-ios-blue: #0A84FF;
+    --color-ios-blue-rgb: 10 132 255;
+
+    /* ==========================================================================
+       2. Semantic Surface & Background Variables
+       ========================================================================== */
+    --theme-bg-canvas: var(--color-oled);
+    --theme-bg-card: var(--color-ios-card);
+    --theme-bg-elevated: var(--color-ios-elevated);
+    --theme-bg-input: var(--color-ios-input);
+    --theme-bg-island: rgba(22, 22, 24, 0.95);
+    --theme-bg-sheet: rgba(28, 28, 30, 0.94);
+    --theme-bg-backdrop: rgba(0, 0, 0, 0.65);
+    --theme-bg-dialog: rgba(30, 30, 30, 0.95);
+    --theme-bg-switch-track: #39393D;
+    --theme-bg-switch-active: var(--color-ios-green);
+
+    /* Selection Colors */
+    --theme-selection-bg: var(--color-ios-fitness);
+    --theme-selection-text: #000000;
+
+    /* ==========================================================================
+       3. Semantic Content & Text Variables
+       ========================================================================== */
+    --theme-text-primary: #FFFFFF;
+    --theme-text-secondary: var(--color-ios-label);
+    --theme-text-tertiary: var(--color-ios-tertiary);
+    --theme-text-accent: var(--color-ios-fitness);
+    --theme-text-danger: var(--color-ios-red);
+
+    /* ==========================================================================
+       4. Semantic Accent & Activity Tokens
+       ========================================================================= */
+    --theme-accent-fitness: var(--color-ios-fitness);
+    --theme-accent-fitness-glow: rgba(164, 255, 0, 0.35);
+    --theme-accent-fitness-dim: rgba(164, 255, 0, 0.15);
+    --theme-accent-fitness-subtle: rgba(164, 255, 0, 0.05);
+
+    --theme-accent-move: var(--color-ios-move);
+    --theme-accent-move-dim: rgba(250, 17, 79, 0.15);
+
+    --theme-accent-stand: var(--color-ios-stand);
+
+    --theme-accent-orange: var(--color-ios-orange);
+    --theme-accent-orange-dim: rgba(255, 159, 10, 0.15);
+
+    --theme-accent-green: var(--color-ios-green);
+    --theme-accent-red: var(--color-ios-red);
+    --theme-accent-blue: var(--color-ios-blue);
+
+    /* ==========================================================================
+       5. Borders & Hairlines
+       ========================================================================== */
+    --theme-border-hairline: rgba(255, 255, 255, 0.12);
+    --theme-border-subtle: rgba(255, 255, 255, 0.06);
+    --theme-border-divider: rgba(255, 255, 255, 0.08);
+    --theme-border-ring-inactive: rgba(255, 255, 255, 0.15);
+
+    /* ==========================================================================
+       6. Border Radii
+       ========================================================================== */
+    --theme-radius-island: 28px;
+    --theme-radius-sheet: 26px;
+    --theme-radius-card: 18px;
+    --theme-radius-group: 14px;
+    --theme-radius-button: 14px;
+    --theme-radius-item: 10px;
+    --theme-radius-pill: 8px;
+    --theme-radius-input: 7px;
+    --theme-radius-circle: 9999px;
+
+    /* ==========================================================================
+       7. Blur & Glassmorphism
+       ========================================================================== */
+    --theme-blur-backdrop: blur(8px);
+    --theme-blur-panel: blur(30px);
+    --theme-blur-island: blur(24px);
+
+    /* ==========================================================================
+       8. Shadows & Elevation
+       ========================================================================== */
+    --theme-shadow-island: 0 18px 40px rgba(0, 0, 0, 0.85);
+    --theme-shadow-card: 0 10px 30px rgba(0, 0, 0, 0.6);
+    --theme-shadow-popover: 0 20px 50px rgba(0, 0, 0, 0.9);
+    --theme-shadow-dialog: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
+    --theme-shadow-ring-active: 0 0 10px rgba(164, 255, 0, 0.25);
+    --theme-shadow-spotlight: 0 0 0 9999px rgba(0, 0, 0, 0.78), 0 0 0 2.5px var(--color-ios-fitness), 0 0 24px var(--theme-accent-fitness-glow);
+
+    /* ==========================================================================
+       9. Motion Physics & Transitions
+       ========================================================================== */
+    --theme-ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
+    --theme-transition-spring: all 0.35s var(--theme-ease-ios);
+    --theme-transition-tap: transform 0.18s var(--theme-ease-ios), opacity 0.18s ease, background-color 0.18s ease;
+    --theme-transition-island-transform: transform 0.5s var(--theme-ease-ios);
+    --theme-transition-island-opacity: opacity 0.4s var(--theme-ease-ios);
+    --theme-transition-backdrop: opacity 0.32s var(--theme-ease-ios);
+    --theme-transition-panel: transform 0.4s var(--theme-ease-ios);
+    --theme-transition-spotlight: top 0.38s var(--theme-ease-ios), left 0.38s var(--theme-ease-ios), width 0.38s var(--theme-ease-ios), height 0.38s var(--theme-ease-ios), opacity 0.25s ease;
+    --theme-transition-popover: top 0.38s var(--theme-ease-ios), left 0.38s var(--theme-ease-ios), opacity 0.25s ease, transform 0.38s var(--theme-ease-ios);
+
+    /* ==========================================================================
+       10. Typography
+       ========================================================================== */
+    --theme-font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+}

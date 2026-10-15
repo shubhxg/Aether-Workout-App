@@ -1,0 +1,146 @@
+/**
+ * Aetherfit - Core Stylesheet
+ * Component styles, animations, and iOS interaction mechanics
+ */
+
+@import './theme.css';
+
+/* ==========================================================================
+   1. Global Reset & Base
+   ========================================================================== */
+* {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--theme-bg-canvas, #000000);
+    color: var(--theme-text-primary, #FFFFFF);
+    font-family: var(--theme-font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+}
+
+::selection {
+    background-color: var(--theme-selection-bg, #A4FF00);
+    color: var(--theme-selection-text, #000000);
+}
+
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   2. Authentic iOS Hairline Borders (0.5px)
+   ========================================================================== */
+.hairline-border {
+    border: 0.5px solid var(--theme-border-hairline, rgba(255, 255, 255, 0.12));
+}
+
+.hairline-b {
+    border-bottom: 0.5px solid var(--theme-border-hairline, rgba(255, 255, 255, 0.12));
+}
+
+.hairline-t {
+    border-top: 0.5px solid var(--theme-border-hairline, rgba(255, 255, 255, 0.12));
+}
+
+/* ==========================================================================
+   3. iOS Spring Physics & Tap Feedback
+   ========================================================================== */
+.ios-spring {
+    transition: var(--theme-transition-spring, all 0.35s cubic-bezier(0.32, 0.72, 0, 1));
+}
+
+.ios-tap {
+    transition: var(--theme-transition-tap, transform 0.18s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.18s ease, background-color 0.18s ease);
+}
+
+.ios-tap:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+}
+
+/* ==========================================================================
+   4. Dynamic Island Notification Animation
+   ========================================================================== */
+#dynamic-island {
+    transition: var(--theme-transition-island-transform, transform 0.5s cubic-bezier(0.32, 0.72, 0, 1)),
+                var(--theme-transition-island-opacity, opacity 0.4s cubic-bezier(0.32, 0.72, 0, 1));
+}
+
+#dynamic-island.island-hidden {
+    transform: translate(-50%, -130%) scale(0.92);
+    opacity: 0;
+    pointer-events: none;
+}
+
+#dynamic-island.island-visible {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ==========================================================================
+   5. iOS Bottom Sheet Modal
+   ========================================================================== */
+.sheet-backdrop {
+    background: var(--theme-bg-backdrop, rgba(0, 0, 0, 0.65));
+    backdrop-filter: var(--theme-blur-backdrop, blur(8px));
+    -webkit-backdrop-filter: var(--theme-blur-backdrop, blur(8px));
+    transition: var(--theme-transition-backdrop, opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1));
+}
+
+.sheet-panel {
+    background: var(--theme-bg-sheet, rgba(28, 28, 30, 0.94));
+    backdrop-filter: var(--theme-blur-panel, blur(30px));
+    -webkit-backdrop-filter: var(--theme-blur-panel, blur(30px));
+    transition: var(--theme-transition-panel, transform 0.4s cubic-bezier(0.32, 0.72, 0, 1));
+}
+
+/* ==========================================================================
+   6. Clean Number Inputs
+   ========================================================================== */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* ==========================================================================
+   7. Hide Scrollbars on Horizontal Pill Strips
+   ========================================================================== */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* ==========================================================================
+   8. Interactive Spotlight Tour Ring & Floating Popover
+   ========================================================================== */
+#tour-spotlight {
+    transition: var(--theme-transition-spotlight, 
+                top 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                left 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                width 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                height 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                opacity 0.25s ease);
+    box-shadow: var(--theme-shadow-spotlight, 0 0 0 9999px rgba(0, 0, 0, 0.78), 0 0 0 2.5px #A4FF00, 0 0 24px rgba(164, 255, 0, 0.35));
+}
+
+#tour-popover {
+    transition: var(--theme-transition-popover, 
+                top 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                left 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                opacity 0.25s ease,
+                transform 0.38s cubic-bezier(0.32, 0.72, 0, 1));
+}
